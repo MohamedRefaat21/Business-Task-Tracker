@@ -1,0 +1,67 @@
+.task-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    cursor: grab; 
+}
+
+.t-Body-main {
+    background-image: url(#APP_FILES#bg.png) !important;
+}
+
+.task-card:active {
+    cursor: grabbing; 
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.maker-icon {
+    margin-right: 12px;
+}
+
+.task-name {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.task-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.task-desc {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.task-icon {
+    display: none !important;
+}
+
+.task-footer {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #888;
+}
+
+#reg .t-Region-title {
+    height: 27px !important;
+    font-size: 28px !important;
+}
+
+.task-maker {
+    font-weight: bold;
+}

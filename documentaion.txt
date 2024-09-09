@@ -1,0 +1,206 @@
+1. Create the TASK_PROGRESS Table
+
+----------------------------------
+CREATE TABLE TASK_PROGRESS (
+    TASK_NAME VARCHAR2(100),
+    TASK_DESC VARCHAR2(255),
+    ASSIGNED_TO VARCHAR2(100),
+    TASK_STATUS VARCHAR2(50),
+    LAST_UPDATE DATE,
+    FILENAME VARCHAR2(255),
+    MIMETYPE VARCHAR2(50),
+    ID NUMBER PRIMARY KEY,
+    TASK_DESCRIPTION VARCHAR2(255)
+);
+
+--------------------------------
+2. Create Report Template
+Create a New Report Template
+Template Type: Report Template Type
+Row Template Type: Named Column (row template)
+Select Template Class: custom 1
+Row Template Code
+------------------------------
+<div class="task-card" draggable="true" ondragstart="handleDrag(event)" data-id="#ID#" data-status="#STATUS#">
+    <div class="task-header">
+        <img src="#MAKER_ICON#" alt="Maker Icon" class="maker-icon">
+        <h3 class="task-name">#TASK_NAME#</h3>
+    </div>
+    <div class="task-body">
+        <p class="task-desc">#TASK_DESC#</p>
+        <img src="#TASK_ICON#" alt="Task Icon" class="task-icon">
+    </div>
+    <div class="task-footer">
+        <span class="task-maker">Assigned by: #TASK_MAKER#</span>
+    </div>
+</div>
+----------------------------
+Template Name: task progress
+----------------------------
+3. Create Classic Reports
+Create Three Classic Reports
+Report 1: Static ID open
+Report 2: Static ID pro
+Report 3: Static ID finished
+Select the Template: Choose the task progress template created in the previous step
+-----------------------------------------------
+4. Add JavaScript
+Add JavaScript Functions in the Function and Global Variable Declaration Section
+---------------------------------------
+function handleDrag(event) {
+    var data = {
+        id: event.target.dataset.id,  
+        status: event.target.dataset.status
+    };
+    var json_data = JSON.stringify(data);
+    event.dataTransfer.setData('data', json_data);
+}
+
+function handleDragover(event) {
+    event.preventDefault();
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    
+    var data = JSON.parse(event.dataTransfer.getData('data'));
+    var id = data.id;
+    var currentStatus = data.status;
+    var newStatus;
+
+    if (event.target.closest('#open')) {
+        newStatus = 'open';
+    } else if (event.target.closest('#finished')) {
+        newStatus = 'finished';
+    } else if (event.target.closest('#pro')) {
+        newStatus = 'pro';
+    }
+
+    if (newStatus && currentStatus !== newStatus) {
+        apex.server.process('Update Todo', {
+            x01: newStatus,
+            x02: id
+        }, {
+            success: function() {
+                apex.event.trigger('#open', 'apexrefresh');
+                apex.event.trigger('#finished', 'apexrefresh');
+                apex.event.trigger('#pro', 'apexrefresh');
+            },
+            dataType: 'text'
+        });
+    }
+}
+----------------------------------------
+5. Add CSS
+Add CSS in the Inline CSS Section
+-------------------------------
+.task-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    cursor: grab; 
+}
+
+.t-Body-main {
+    background-image: url(#APP_FILES#bg.png) !important;
+}
+
+.task-card:active {
+    cursor: grabbing; 
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.maker-icon {
+    margin-right: 12px;
+}
+
+.task-name {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.task-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.task-desc {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.task-icon {
+    display: none !important;
+}
+
+.task-footer {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #888;
+}
+
+#reg .t-Region-title {
+    height: 27px !important;
+    font-size: 28px !important;
+}
+
+.task-maker {
+    font-weight: bolder;
+}
+
+-----------------------------------
+6. Add AJAX Callback
+Add an AJAX Callback
+Name of Process: Update Todo
+PL/SQL Code
+-------------------------------------------
+BEGIN
+    IF apex_application.g_x01 = 'open' THEN
+        UPDATE TASK_PROGRESS
+        SET STATUS = 'open'
+        WHERE ID = apex_application.g_x02;
+    ELSIF apex_application.g_x01 = 'finished' THEN
+        UPDATE TASK_PROGRESS
+        SET STATUS = 'finished'
+        WHERE ID = apex_application.g_x02;
+    ELSIF apex_application.g_x01 = 'pro' THEN
+        UPDATE TASK_PROGRESS
+        SET STATUS = 'pro'
+        WHERE ID = apex_application.g_x02;
+    END IF;
+    COMMIT;
+END;
+------------------------------------------
+7. Add Custom Attributes
+Add Custom Attributes to Each Report
+Report 1: ondragover='handleDragover(event)' ondrop='handleDrop(event)'
+Report 2: ondragover='handleDragover(event)' ondrop='handleDrop(event)'
+Report 3: ondragover='handleDragover(event)' ondrop='handleDrop(event)'
+----------------------------------------------------
+The SQL query provided is for generating the first report and includes customization options. You can adjust it as needed. The query retrieves task details from the TASK_PROGRESS table where the status is 'open', and it customizes the TASK_NAME with a specific color for open tasks. The report also includes task descriptions, the person assigned to the task, and an icon for the task maker.
+
+SELECT CASE 
+           WHEN STATUS = 'open' THEN '<span style="color: #CA4D3C;">' || TASK_NAME || '</span>'
+           ELSE TASK_NAME
+       END AS TASK_NAME,
+       TASK_DESC,
+       ASSIGNED_TO AS TASK_MAKER,
+       STATUS,
+       ID,
+       '#APP_FILES#to-do-list (1).png' AS MAKER_ICON
+FROM TASK_PROGRESS
+WHERE STATUS = 'open';
